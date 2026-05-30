@@ -6,3 +6,5 @@ media_art = df_est['edad'].mean()
 
 print("--- MEDIA ARITMÉTICA ---")
 print(f"La edad promedio de los estudiantes es: {media_art:.2f} años")
+
+

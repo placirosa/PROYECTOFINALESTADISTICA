@@ -59,3 +59,4 @@ ax.set_xticks(cortes)
 
 ax.legend()
 plt.show()
+

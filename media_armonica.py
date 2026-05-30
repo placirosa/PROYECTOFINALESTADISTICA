@@ -17,3 +17,7 @@ if not datos_filtrados.empty:
     print(f"La media armónica de '{columna_analizar}' es: {media_arm:.2f}")
 else:
     print(f"No hay valores válidos mayores a cero en '{columna_analizar}'.")
+    
+    
+
+    

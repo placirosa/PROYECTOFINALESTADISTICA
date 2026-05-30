@@ -12,3 +12,5 @@ if not serie_moda.empty:
     print(f"La edad más común (moda) entre los estudiantes es: {moda_edad} años")
 else:
     print("No se pudo calcular la moda para la columna 'edad'.")
+    
+    

@@ -8,3 +8,5 @@ mediana_edad = df_est['edad'].median()
 
 print("--- MEDIANA ---")
 print(f"La mediana de la edad es: {mediana_edad:.1f} años")
+
+
