@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import hmean, gmean  
 
 # =============================================================================
 # CONFIGURACIÓN DE STREAMLIT
@@ -60,7 +61,7 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# MÉTRICAS
+# MÉTRICAS INICIALES
 # =============================================================================
 
 col1, col2, col3 = st.columns(3)
@@ -99,7 +100,7 @@ VARIABLE CUALITATIVA: CARRERAS
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# TABLA DE FRECUENCIAS
+# TABLA DE FRECUENCIAS - FASE 2
 # =============================================================================
 
 frec_cualita = (
@@ -127,7 +128,7 @@ frec_cualita["Hi"] = (
 )
 
 # =============================================================================
-# TABLA HTML CORREGIDA (Línea limpia para renderizado directo)
+# TABLA HTML RENDERIZADA
 # =============================================================================
 
 filas = ""
@@ -162,10 +163,7 @@ plt.style.use("seaborn-v0_8-whitegrid")
 
 colA, colB = st.columns(2)
 
-# =============================================================================
-# DIAGRAMA DE BARRAS
-# =============================================================================
-
+# Diagrama de Barras
 with colA:
     fig1, ax1 = plt.subplots(figsize=(7, 4))
 
@@ -183,16 +181,11 @@ with colA:
         "DIAGRAMA DE BARRAS",
         fontweight="bold"
     )
-
     ax1.set_xlabel("Carrera")
     ax1.set_ylabel("Frecuencia")
-
     st.pyplot(fig1)
 
-# =============================================================================
-# GRÁFICO DE TORTA
-# =============================================================================
-
+# Gráfico de Torta
 with colB:
     fig2, ax2 = plt.subplots(figsize=(5, 5))
 
@@ -207,7 +200,6 @@ with colB:
         "GRÁFICO DE TORTA",
         fontweight="bold"
     )
-
     st.pyplot(fig2)
 
 # =============================================================================
@@ -255,26 +247,29 @@ tabla_discreta["Hi"] = (
 st.dataframe(tabla_discreta)
 
 # =============================================================================
-# GRÁFICO DE BASTONES
+# GRÁFICO DE BASTONES NATIVO (ax.stem)
 # =============================================================================
 
 fig3, ax3 = plt.subplots(figsize=(10, 4))
 
 markerline, stemlines, baseline = ax3.stem(
     tabla_discreta["Materias"],
-    tabla_discreta["fi"]
+    tabla_discreta["fi"],
+    linefmt='b-',      # Color azul para los bastones
+    markerfmt='bo',     # Puntos azules arriba
+    basefmt=' '         # Oculta línea base horizontal
 )
 
-plt.setp(stemlines, linewidth=2)
-plt.setp(markerline, markersize=8)
+plt.setp(stemlines, linewidth=2.5)
+plt.setp(markerline, markersize=7)
 
 ax3.set_title(
     "GRÁFICO DE BASTONES",
     fontweight="bold"
 )
-
 ax3.set_xlabel("Materias")
 ax3.set_ylabel("Frecuencia")
+ax3.set_xticks(tabla_discreta["Materias"])
 
 st.pyplot(fig3)
 
@@ -295,24 +290,10 @@ VARIABLE CUANTITATIVA AGRUPADA
 </h2>
 """, unsafe_allow_html=True)
 
-# =============================================================================
-# REGLA DE STURGES
-# =============================================================================
-
+# Regla de Sturges
 n = len(df_est)
-
-rango = (
-    df_est["edad"].max()
-    -
-    df_est["edad"].min()
-)
-
-k = int(
-    np.ceil(
-        1 + 3.322 * np.log10(n)
-    )
-)
-
+rango = df_est["edad"].max() - df_est["edad"].min()
+k = int(np.ceil(1 + 3.322 * np.log10(n)))
 amplitud = rango / k
 
 st.markdown(f"""
@@ -322,35 +303,24 @@ padding:20px;
 border-radius:10px;
 border:1px solid #f59e0b;
 ">
-
-<h3 style="color:#92400e;">
-Regla de Sturges
-</h3>
-
+<h3 style="color:#92400e; margin-top:0;">Regla de Sturges</h3>
 <ul>
-<li><b>Muestra:</b> {n}</li>
+<li><b>Muestra (n):</b> {n}</li>
 <li><b>Rango:</b> {rango}</li>
-<li><b>Intervalos:</b> {k}</li>
+<li><b>Intervalos (k):</b> {k}</li>
 <li><b>Amplitud:</b> {amplitud:.2f}</li>
 </ul>
-
 </div>
 """, unsafe_allow_html=True)
 
-# =============================================================================
-# INTERVALOS CORREGIDOS (Formato string limpio sin left/right JSON)
-# =============================================================================
-
-cortes = np.linspace(
-    df_est["edad"].min(),
-    df_est["edad"].max(),
-    k + 1
-)
+# Arreglo de cortes exactos
+cortes = np.arange(df_est["edad"].min(), df_est["edad"].max() + amplitud, amplitud)
 
 df_est["intervalos"] = pd.cut(
     df_est["edad"],
     bins=cortes,
-    include_lowest=True
+    include_lowest=True,
+    right=False
 )
 
 tabla_grupada = (
@@ -362,13 +332,13 @@ tabla_grupada = (
 
 tabla_grupada.columns = ["Intervalos", "fi"]
 
-# Calculamos y redondeamos la Marca de clase antes de mutar la columna Intervalos
+# Marca de clase
 tabla_grupada["Marca"] = (
     tabla_grupada["Intervalos"]
     .apply(lambda x: round(x.mid, 2))
 )
 
-# Convertimos los intervalos a un formato de texto amigable [Linf - Lsup)
+# Formateo visual del intervalo string para quitar notaciones molestas de pd.cut
 tabla_grupada["Intervalos"] = (
     tabla_grupada["Intervalos"]
     .apply(lambda x: f"[{round(x.left, 1)} - {round(x.right, 1)})")
@@ -381,7 +351,7 @@ tabla_grupada["Fi"] = (
 st.dataframe(tabla_grupada)
 
 # =============================================================================
-# HISTOGRAMA Y POLÍGONO SUPERPUESTO (CORREGIDO Y ALINEADO)
+# HISTOGRAMA Y POLÍGONO SUPERPUESTO
 # =============================================================================
 
 colC, colD = st.columns(2)
@@ -398,7 +368,6 @@ with colC:
         label="Histograma"
     )
 
-    # Puntos medios calculados estrictamente desde los bordes del histograma
     puntos_medios = [
         (bordes[i] + bordes[i+1]) / 2 
         for i in range(len(bordes)-1)
@@ -419,10 +388,8 @@ with colC:
         "HISTOGRAMA Y POLÍGONO",
         fontweight="bold"
     )
-
     ax4.set_xticks(cortes)
     ax4.set_xlim(cortes[0] - 0.5, cortes[-1] + 0.5)
-    
     ax4.set_xlabel("Edad")
     ax4.set_ylabel("Frecuencia")
     ax4.legend()
@@ -430,38 +397,48 @@ with colC:
     st.pyplot(fig4)
 
 # =============================================================================
-# OJIVA (CORREGIDA Y ALINEADA)
+# OJIVA CON SOMBRA RELLENA (ax.fill_between)
 # =============================================================================
 
 with colD:
     fig5, ax5 = plt.subplots(figsize=(6, 4))
 
-    limites = [cortes[0]] + [bordes[i+1] for i in range(len(bordes)-1)]
+    limites_superiores = [intervalo.right for intervalo in df_est["intervalos"].cat.categories]
+    x_ojiva = [cortes[0]] + limites_superiores
     y_ojiva = [0] + list(tabla_grupada["Fi"])
 
+    # Línea principal
     ax5.plot(
-        limites,
+        x_ojiva,
         y_ojiva,
         marker="o",
-        linewidth=2,
-        color="#10b981"
+        linewidth=2.5,
+        color="purple",
+        label="Ojiva (Fi)"
+    )
+
+    # Relleno de la sombra inferior
+    ax5.fill_between(
+        x_ojiva,
+        y_ojiva,
+        color="purple",
+        alpha=0.3
     )
 
     ax5.set_title(
-        "OJIVA",
+        "OJIVA DE FRECUENCIAS ACUMULADAS",
         fontweight="bold"
     )
-
     ax5.set_xticks(cortes)
     ax5.set_xlim(cortes[0] - 0.5, cortes[-1] + 0.5)
-    
-    ax5.set_xlabel("Edad")
-    ax5.set_ylabel("Frecuencia Acumulada")
+    ax5.set_xlabel("Límites de los Intervalos de Edad")
+    ax5.set_ylabel("Frecuencia Acumulada (Fi)")
+    ax5.legend()
 
     st.pyplot(fig5)
 
 # =============================================================================
-# ESTADÍSTICAS DESCRIPTIVAS
+# ESTADÍSTICAS DESCRIPTIVAS INTEGRADAS 
 # =============================================================================
 
 st.markdown("""
@@ -472,31 +449,62 @@ color:#7c3aed;
 border-bottom:2px solid #c4b5fd;
 padding-bottom:10px;
 ">
-ESTADÍSTICAS DESCRIPTIVAS
+ESTADÍSTICAS DESCRIPTIVAS E INDICADORES CENTRALES
 </h2>
 """, unsafe_allow_html=True)
 
-media = df_est["edad"].mean()
-mediana = df_est["edad"].median()
-desv = df_est["edad"].std()
+# Variables base de cálculo (Edad)
+columna_num = "edad"
+media_aritmetica = df_est[columna_num].mean()
+mediana = df_est[columna_num].median()
+desv = df_est[columna_num].std()
 
-modas = df_est["edad"].mode().tolist()
+modas = df_est[columna_num].mode().tolist()
 moda_texto = ", ".join(map(str, modas))
 
-st.markdown(f"""
-<div style="
-background-color:#ede9fe;
-padding:20px;
-border-radius:10px;
-border:1px solid #8b5cf6;
-">
+# Pipeline de seguridad para armónica y geométrica (valores estrictamente mayores a cero)
+datos_validos = df_est[df_est[columna_num] > 0][columna_num]
 
-<ul>
-<li><b>Media:</b> {media:.2f}</li>
-<li><b>Mediana:</b> {mediana}</li>
-<li><b>Moda(s):</b> {moda_texto}</li>
-<li><b>Desviación Estándar:</b> {desv:.2f}</li>
-</ul>
+media_armonica = hmean(datos_validos) if not datos_validos.empty else 0
+media_geometrica = gmean(datos_validos) if not datos_validos.empty else 0
+media_cuadratica = np.sqrt(np.mean(df_est[columna_num]**2))
 
-</div>
-""", unsafe_allow_html=True)
+# Despliegue en 2 bloques horizontales limpios con HTML
+colE, colF = st.columns(2)
+
+with colE:
+    st.markdown(f"""
+    <div style="
+    background-color:#ede9fe;
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #8b5cf6;
+    height: 100%;
+    ">
+    <h3 style="color:#6d28d9; margin-top:0;">Medidas Estándar</h3>
+    <ul>
+    <li><b>Media Aritmética:</b> {media_aritmetica:.2f} años</li>
+    <li><b>Mediana:</b> {mediana} años</li>
+    <li><b>Moda(s):</b> {moda_texto} años</li>
+    <li><b>Desviación Estándar:</b> {desv:.2f}</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+with colF:
+    st.markdown(f"""
+    <div style="
+    background-color:#f5f3ff;
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #a78bfa;
+    height: 100%;
+    ">
+    <h3 style="color:#6d28d9; margin-top:0;">Medidas de Medias Avanzadas</h3>
+    <ul>
+    <li><b>Media Armónica:</b> {media_armonica:.2f}</li>
+    <li><b>Media Geométrica:</b> {media_geometrica:.2f}</li>
+    <li><b>Media Cuadrática (RMS):</b> {media_cuadratica:.2f}</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
