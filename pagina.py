@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import hmean, gmean  
+from scipy.stats import hmean, gmean  # Librerías para medias avanzadas
 
 # =============================================================================
 # CONFIGURACIÓN DE STREAMLIT
@@ -34,7 +34,7 @@ color:white;
 text-align:center;
 font-family:sans-serif;
 ">
-GUÍA DE LABORATORIO - ESTADÍSTICA DESCRIPTIVA
+PROYECTO  - ESTADÍSTICA DESCRIPTIVA
 </h1>
 
 <p style="
@@ -42,7 +42,7 @@ color:#cbd5e1;
 text-align:center;
 font-size:18px;
 ">
-Procesamiento Estadístico con Python y Streamlit
+CRUZ PAREDES PLACIDO RAUL     38992
 </p>
 </div>
 """, unsafe_allow_html=True)
@@ -438,7 +438,7 @@ with colD:
     st.pyplot(fig5)
 
 # =============================================================================
-# ESTADÍSTICAS DESCRIPTIVAS INTEGRADAS 
+# ESTADÍSTICAS DESCRIPTIVAS E INDICADORES DE FORMA (AÑADIDOS ASIMETRÍA Y CURTOSIS)
 # =============================================================================
 
 st.markdown("""
@@ -462,15 +462,19 @@ desv = df_est[columna_num].std()
 modas = df_est[columna_num].mode().tolist()
 moda_texto = ", ".join(map(str, modas))
 
-# Pipeline de seguridad para armónica y geométrica (valores estrictamente mayores a cero)
+# Pipeline de seguridad para armónica y geométrica
 datos_validos = df_est[df_est[columna_num] > 0][columna_num]
 
 media_armonica = hmean(datos_validos) if not datos_validos.empty else 0
 media_geometrica = gmean(datos_validos) if not datos_validos.empty else 0
 media_cuadratica = np.sqrt(np.mean(df_est[columna_num]**2))
 
-# Despliegue en 2 bloques horizontales limpios con HTML
-colE, colF = st.columns(2)
+# --- NUEVOS CÁLCULOS DE MEDIDAS DE FORMA ---
+asimetria = df_est[columna_num].skew()
+curtosis = df_est[columna_num].kurt()
+
+# Despliegue en 3 columnas horizontales limpias con HTML para los 3 bloques
+colE, colF, colG = st.columns(3)
 
 with colE:
     st.markdown(f"""
@@ -508,5 +512,24 @@ with colF:
     </ul>
     </div>
     """, unsafe_allow_html=True)
-    
-    
+
+with colG:
+    st.markdown(f"""
+    <div style="
+    background-color:#f8fafc;
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #cbd5e1;
+    height: 100%;
+    ">
+    <h3 style="color:#475569; margin-top:0;">Medidas de Forma</h3>
+    <ul>
+    <li><b>Asimetría (Skewness):</b> {asimetria:.4f}</li>
+    <li><b>Curtosis (Kurtosis):</b> {curtosis:.4f}</li>
+    </ul>
+    <p style="font-size:12px; color:#64748b; margin-bottom:0; margin-top:10px;">
+    *Sirven para describir matemáticamente la silueta del Histograma.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
