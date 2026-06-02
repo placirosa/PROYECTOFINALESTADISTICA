@@ -1,11 +1,7 @@
 import pandas as pd
 from scipy.stats import hmean
-
-# 1. Carga de datos
 df_est = pd.read_csv("datos_estudiantes.csv")
 
-# 2. Definimos la columna exacta en minúsculas como está en el CSV
-# Si tu inge te pide la edad, déjalo como 'edad'. Si te pide materias, cambia a 'materias_aprobadas'
 columna_analizar = 'edad' 
 
 # Filtrar para asegurar que no entren ceros o negativos

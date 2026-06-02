@@ -1,9 +1,6 @@
 import pandas as pd
-
-# 1. Carga de datos
 df_est = pd.read_csv("datos_estudiantes.csv")
 
-# 2. Cálculo de la Moda (usando 'edad' en minúscula)
 serie_moda = df_est['edad'].mode()
 
 print("--- MODA ---")
