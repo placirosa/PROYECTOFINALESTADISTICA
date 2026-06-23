@@ -6,10 +6,6 @@ env/
 # Jupyter Notebooks checkpoints
 .ipynb_checkpoints/
 
-# Datasets pesados (Evitar subir datos masivos)
-*.csv
-*.xlsx
-*.parquet
 
 # Archivos compilados y configuración local
 __pycache__/
