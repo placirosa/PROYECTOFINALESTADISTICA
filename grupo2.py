@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import gmean, hmean
 
+
 # -----------------------------------------------------------------------------
 # 1. CONFIGURACIÓN E INTERFAZ VISUAL PREMIUM
 # -----------------------------------------------------------------------------
